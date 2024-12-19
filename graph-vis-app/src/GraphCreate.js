@@ -8,45 +8,40 @@ import { v4 as uuid } from "uuid";
 const GraphCreate = () => {
   const containerRef = useRef(null); // Create a reference for the container
   const [inputValue, setInputValue] = useState(""); // State to store input
+  const [graph, setGraph] = useState(new Graph()); // Store the graph instance in state
+  const [renderer, setRenderer] = useState(null); // To store the Sigma renderer
 
+  // This effect will run once when the component mounts
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Create a sample graph
-    const graph = new Graph();
-    graph.addNode("n1", { x: 0, y: 0, size: 10, color: chroma.random().hex() });
-    graph.addNode("n2", { x: -5, y: 5, size: 10, color: chroma.random().hex() });
-    graph.addNode("n3", { x: 5, y: 5, size: 10, color: chroma.random().hex() });
-    graph.addNode("n4", { x: 0, y: 10, size: 10, color: chroma.random().hex() });
-    graph.addEdge("n1", "n2");
-    graph.addEdge("n2", "n4");
-    graph.addEdge("n4", "n3");
-    graph.addEdge("n3", "n1");
-
-    // Create the spring layout and start it
-    const layout = new ForceSupervisor(graph, { isNodeFixed: (_, attr) => attr.highlighted });
-    layout.start();
-
-    // Create the sigma renderer
-    const renderer = new Sigma(graph, containerRef.current, {
+    // Initialize the Sigma renderer for the first time
+    const newRenderer = new Sigma(graph, containerRef.current, {
       minCameraRatio: 0.5,
       maxCameraRatio: 2,
     });
+
+    // Set the new renderer state
+    setRenderer(newRenderer);
+
+    // Create the layout and start it
+    const layout = new ForceSupervisor(graph, { isNodeFixed: (_, attr) => attr.highlighted });
+    layout.start();
 
     // Drag'n'drop logic
     let draggedNode = null;
     let isDragging = false;
 
-    renderer.on("downNode", (e) => {
+    newRenderer.on("downNode", (e) => {
       isDragging = true;
       draggedNode = e.node;
       graph.setNodeAttribute(draggedNode, "highlighted", true);
-      if (!renderer.getCustomBBox()) renderer.setCustomBBox(renderer.getBBox());
+      if (!newRenderer.getCustomBBox()) newRenderer.setCustomBBox(newRenderer.getBBox());
     });
 
-    renderer.on("moveBody", (e) => {
+    newRenderer.on("moveBody", (e) => {
       if (!isDragging || !draggedNode) return;
-      const pos = renderer.viewportToGraph(e);
+      const pos = newRenderer.viewportToGraph(e);
       graph.setNodeAttribute(draggedNode, "x", pos.x);
       graph.setNodeAttribute(draggedNode, "y", pos.y);
       e.preventSigmaDefault();
@@ -59,13 +54,14 @@ const GraphCreate = () => {
       isDragging = false;
       draggedNode = null;
     };
-    renderer.on("upNode", handleUp);
-    renderer.on("upStage", handleUp);
+    newRenderer.on("upNode", handleUp);
+    newRenderer.on("upStage", handleUp);
 
     return () => {
-      renderer.kill();
+      // Cleanup the renderer when the component is unmounted
+      newRenderer.kill();
     };
-  }, []); // Runs only once when the component mounts
+  }, [graph]); // Re-run effect when the `graph` state changes
 
   // Handle the input change
   const handleInputChange = (event) => {
@@ -76,12 +72,43 @@ const GraphCreate = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
+    // Clear the existing graph (remove all nodes and edges)
+    graph.clear();
+
     // Parse the input as an adjacency list
-    const adjacencyList = inputValue.split("\n").map((line) => line.split(" "));
+    const adjacencyList = inputValue.split("\n").map((line) => {
+      const [node, neighbors] = line.split(":");
+      return { node, neighbors: neighbors.split(",").map((n) => n.trim()) };
+    });
+
     console.log("Parsed Adjacency List: ", adjacencyList);
 
-    // Here you could generate the graph using the adjacency list
-    // Example: graph.addEdge(node1, node2) for each pair in adjacencyList
+    // Loop through the adjacency list and add nodes/edges
+    adjacencyList.forEach(({ node, neighbors }) => {
+      // Add the node if it doesn't exist already
+      if (!graph.hasNode(node)) {
+        graph.addNode(node, { x: Math.random() * 10, y: Math.random() * 10, size: 10, color: chroma.random().hex() });
+      }
+
+      // Add edges from the node to its neighbors
+      neighbors.forEach((neighbor) => {
+        if (!graph.hasNode(neighbor)) {
+          graph.addNode(neighbor, { x: Math.random() * 10, y: Math.random() * 10, size: 10, color: chroma.random().hex() });
+        }
+        graph.addEdge(node, neighbor);
+      });
+    });
+
+    // After clearing and updating the graph, reinitialize the Sigma renderer
+    if (renderer) {
+      renderer.kill(); // Remove the old renderer
+    }
+
+    const newRenderer = new Sigma(graph, containerRef.current, {
+      minCameraRatio: 0.5,
+      maxCameraRatio: 2,
+    });
+    setRenderer(newRenderer); // Store the new renderer instance in the state
   };
 
   return (
