@@ -13,16 +13,14 @@ const GraphCreate = () => {
 
   // This effect will run once when the component mounts
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !graph) return;
 
-    // Initialize the Sigma renderer for the first time
+    // Create the Sigma renderer
     const newRenderer = new Sigma(graph, containerRef.current, {
       minCameraRatio: 0.5,
       maxCameraRatio: 2,
+      nodeLabel: 'label', // Use the 'label' property for rendering node labels
     });
-
-    // Set the new renderer state
-    setRenderer(newRenderer);
 
     // Create the layout and start it
     const layout = new ForceSupervisor(graph, { isNodeFixed: (_, attr) => attr.highlighted });
@@ -72,8 +70,9 @@ const GraphCreate = () => {
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    // Clear the existing graph (remove all nodes and edges)
-    graph.clear();
+    // Create a new empty graph
+    const newGraph = new Graph();
+    setGraph(newGraph); // Set the new graph state
 
     // Parse the input as an adjacency list
     const adjacencyList = inputValue.split("\n").map((line) => {
@@ -83,32 +82,53 @@ const GraphCreate = () => {
 
     console.log("Parsed Adjacency List: ", adjacencyList);
 
-    // Loop through the adjacency list and add nodes/edges
+    const edgesToAdd = [];
+
+    // Loop through the adjacency list and add nodes/edges to the new graph
     adjacencyList.forEach(({ node, neighbors }) => {
       // Add the node if it doesn't exist already
-      if (!graph.hasNode(node)) {
-        graph.addNode(node, { x: Math.random() * 10, y: Math.random() * 10, size: 10, color: chroma.random().hex() });
+      if (!newGraph.hasNode(node)) {
+        newGraph.addNode(node, {
+          x: Math.random() * 10, 
+          y: Math.random() * 10, 
+          size: 10, 
+          color: chroma.random().hex(),
+          label: node, // Add the label (using the node name as the label)
+        });
       }
 
-      // Add edges from the node to its neighbors
+      // Loop through neighbors and find valid edges
       neighbors.forEach((neighbor) => {
-        if (!graph.hasNode(neighbor)) {
-          graph.addNode(neighbor, { x: Math.random() * 10, y: Math.random() * 10, size: 10, color: chroma.random().hex() });
+        if (!newGraph.hasNode(neighbor)) {
+          newGraph.addNode(neighbor, {
+            x: Math.random() * 10, 
+            y: Math.random() * 10, 
+            size: 10, 
+            color: chroma.random().hex(),
+            label: neighbor, // Add the label (using the neighbor name as the label)
+          });
         }
-        graph.addEdge(node, neighbor);
+        
+        // Add the edge to the list (we will check if it exists in both directions)
+        edgesToAdd.push({ node, neighbor });
       });
     });
 
-    // After clearing and updating the graph, reinitialize the Sigma renderer
-    if (renderer) {
-      renderer.kill(); // Remove the old renderer
-    }
+    // Filter valid edges (edges that appear in both directions)
+    const validEdges = edgesToAdd.filter(
+      ({ node, neighbor }) =>
+        edgesToAdd.some(
+          (e) => e.node === neighbor && e.neighbor === node
+        )
+    );
 
-    const newRenderer = new Sigma(graph, containerRef.current, {
-      minCameraRatio: 0.5,
-      maxCameraRatio: 2,
+    // Add only the valid edges to the graph
+    validEdges.forEach(({ node, neighbor }) => {
+      newGraph.addEdge(node, neighbor);
     });
-    setRenderer(newRenderer); // Store the new renderer instance in the state
+
+    // After setting the new graph, force the effect to re-run to reinitialize Sigma renderer
+    setGraph(newGraph);
   };
 
   return (
