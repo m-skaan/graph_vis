@@ -7,6 +7,7 @@ This code was developed from the documentation given [here](https://www.sigmajs.
 
 ### Set-Up
 First clone the repository.
+
 Then, if you have the necessary installs to run React and the Sigma library, simply use:
 ```
 npm start
