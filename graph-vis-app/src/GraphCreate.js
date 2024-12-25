@@ -146,7 +146,9 @@ const GraphCreate = () => {
       >
         {/* This div will serve as the container for Sigma.js */}
       </div>
-
+      <div style={{ padding: "10px", backgroundColor: "#f8f9fa", fontWeight: "bold" }}>
+        Adjacency List
+      </div>
       {/* Textbox area */}
       <form onSubmit={handleSubmit} style={{ padding: "10px", backgroundColor: "#fff", flexShrink: 0}}>
         <textarea
