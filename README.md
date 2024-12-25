@@ -13,6 +13,4 @@ Then, if you have the necessary installs to run React and the Sigma library, sim
 npm start
 ```
 ### Follow-Up
-If you have any suggestions for the code, please email me:
-
-mgupta353[at]gatech[dot]edu
+If you have any suggestions for the code, please email me.
