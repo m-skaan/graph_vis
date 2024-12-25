@@ -124,6 +124,10 @@ const GraphCreate = () => {
         )
     );
 
+    if (validEdges.length != edgesToAdd.length) {
+      alert("Check that all edges added are bidirectional.");
+    }
+
     // Add only the valid edges to the graph
     validEdges.forEach(({ node, neighbor }) => {
       newGraph.addEdge(node, neighbor);
