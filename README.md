@@ -6,7 +6,8 @@ This project uses Javascript with a React front-end utilizing the [Sigma.js](htt
 This code was developed from the documentation given [here](https://www.sigmajs.org/storybook/?path=/story/mouse-manipulations--story).
 
 ### Set-Up
-If you have the necessary installs to run React and the Sigma library, simply use:
+First clone the repository.
+Then, if you have the necessary installs to run React and the Sigma library, simply use:
 ```
 npm start
 ```
