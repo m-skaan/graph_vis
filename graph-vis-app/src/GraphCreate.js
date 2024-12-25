@@ -7,7 +7,9 @@ import { v4 as uuid } from "uuid";
 
 const GraphCreate = () => {
   const containerRef = useRef(null); // Create a reference for the container
-  const [inputValue, setInputValue] = useState(""); // State to store input
+  const [inputValue, setInputValue] = useState(
+    "A->B,C,D\nB->A,C,D\nC->A,B\nD->A,B" // Example input
+  ); // State to store input
   const [graph, setGraph] = useState(new Graph()); // Store the graph instance in state
   const [renderer, setRenderer] = useState(null); // To store the Sigma renderer
 
@@ -76,7 +78,7 @@ const GraphCreate = () => {
 
     // Parse the input as an adjacency list
     const adjacencyList = inputValue.split("\n").map((line) => {
-      const [node, neighbors] = line.split(":");
+      const [node, neighbors] = line.split("->");
       return { node, neighbors: neighbors.split(",").map((n) => n.trim()) };
     });
 
@@ -146,7 +148,7 @@ const GraphCreate = () => {
       </div>
 
       {/* Textbox area */}
-      <form onSubmit={handleSubmit} style={{ padding: "10px", backgroundColor: "#fff" }}>
+      <form onSubmit={handleSubmit} style={{ padding: "10px", backgroundColor: "#fff", flexShrink: 0}}>
         <textarea
           value={inputValue}
           onChange={handleInputChange}
