@@ -139,6 +139,9 @@ const GraphCreate = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+      <div style={{ padding: "14px", backgroundColor: "#f8f9fa", fontWeight: "bold" }}>
+        Adjacency List to Graph Visualizer
+      </div>
       <div
         ref={containerRef}
         id="sigma-container"
@@ -151,7 +154,7 @@ const GraphCreate = () => {
         {/* This div will serve as the container for Sigma.js */}
       </div>
       <div style={{ padding: "10px", backgroundColor: "#f8f9fa", fontWeight: "bold" }}>
-        Adjacency List
+        Enter Adjacency List:
       </div>
       {/* Textbox area */}
       <form onSubmit={handleSubmit} style={{ padding: "10px", backgroundColor: "#fff", flexShrink: 0}}>
